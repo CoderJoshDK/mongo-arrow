@@ -1401,3 +1401,61 @@ class TestFindArrowAllParallelism(unittest.TestCase):
             table_off.equals(table_thread),
             msg=f"tables differ:\n{table_off}\n\n{table_thread}",
         )
+
+    def test_find_multiple_batches_of_different_schema(self):
+        docs = [{"_id": i, "value": i} for i in range(50)] + [
+            {
+                "_id": 50,
+                "value": 2**40,  # Value much larger than Int32 max
+            }
+        ]
+        self.coll.insert_many(docs)
+
+        orig_method = self.coll.find_raw_batches
+
+        def mock_find_raw_batches(*args, **kwargs):
+            kwargs["batch_size"] = 10
+            return orig_method(*args, **kwargs)
+
+        with mock.patch.object(
+            pymongo.collection.Collection,
+            "find_raw_batches",
+            wraps=mock_find_raw_batches,
+        ):
+            table_off = find_arrow_all(
+                self.coll,
+                {},
+                parallelism="off",
+            )
+            table_proc = find_arrow_all(
+                self.coll,
+                {},
+                parallelism="processes",
+            )
+            table_thread = find_arrow_all(
+                self.coll,
+                {},
+                parallelism="threads",
+            )
+
+        self.assertEqual(table_off.num_rows, len(docs))
+        self.assertEqual(table_proc.num_rows, len(docs))
+        self.assertEqual(table_thread.num_rows, len(docs))
+
+        self.assertTrue(
+            table_off.schema.equals(table_proc.schema),
+            msg=f"{table_off.schema} != {table_proc.schema}",
+        )
+        self.assertTrue(
+            table_off.schema.equals(table_thread.schema),
+            msg=f"{table_off.schema} != {table_thread.schema}",
+        )
+
+        self.assertTrue(
+            table_off.equals(table_proc),
+            msg=f"tables differ:\n{table_off}\n\n{table_proc}",
+        )
+        self.assertTrue(
+            table_off.equals(table_thread),
+            msg=f"tables differ:\n{table_off}\n\n{table_thread}",
+        )

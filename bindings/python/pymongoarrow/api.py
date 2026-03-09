@@ -169,12 +169,12 @@ def find_arrow_all(
     if parallelism == "threads":
         with ThreadPoolExecutor(max_workers=4) as executor:
             results = list(executor.map(lambda args: _process_batch(*args), args_iterable()))
-        return pa.concat_tables(results, promote_options="default")
+        return pa.concat_tables(results, promote_options="permissive")
 
     if parallelism == "processes":
         with multiprocessing.Pool(processes=4) as pool:
             results = pool.starmap(_process_batch, args_iterable())
-        return pa.concat_tables(results, promote_options="default")
+        return pa.concat_tables(results, promote_options="permissive")
 
     context = PyMongoArrowContext(
         schema, codec_options=collection.codec_options, allow_invalid=allow_invalid

@@ -244,7 +244,12 @@ cdef class BuilderManager:
             builder = <_ArrayBuilderBase>self.builder_map.get(full_key, None)
             # If the inferred type was int32 but the same field has an int64 value,
             # re-infer the field's type since int32 is a strict subset of int64.
-            if not self.has_schema and (builder is None or builder.type_marker == BSON_TYPE_INT32 and value_t == BSON_TYPE_INT64):
+            # If builder already existed, avoid ditching previously appended values.
+            if not self.has_schema and builder is not None and builder.type_marker == BSON_TYPE_INT32 and value_t == BSON_TYPE_INT64:
+                old_array = builder.finish().cast('int64')
+                builder = self.get_builder(full_key, value_t, doc_iter, True)
+                builder.append_values(old_array.to_pylist())
+            elif not self.has_schema and builder is None:
                 builder = self.get_builder(full_key, value_t, doc_iter, True)
             if builder is None:
                 continue
