@@ -250,7 +250,7 @@ cdef class BuilderManager:
                 builder = self.get_builder(full_key, value_t, doc_iter, True)
                 for val in old_array:
                     if val.is_valid:
-                        (<Int64Builder>builder).builder.get().Append(val)
+                        (<Int64Builder>builder).builder.get().Append(val.as_py())
                     else:
                         (<Int64Builder>builder).builder.get().AppendNull()
             elif not self.has_schema and builder is None:
