@@ -24,7 +24,8 @@ def test_aggregate_pandas_all_schema_inference_int32_avoids_overflow():
     coll.insert_many(
         [
             {"_id": 1, "value": 1},
-            {"_id": 2, "value": 2**40},  # much larger than Int32 max
+            {"_id": 2, "value": None},
+            {"_id": 3, "value": 2**40},  # much larger than Int32 max
         ]
     )
 
@@ -35,7 +36,7 @@ def test_aggregate_pandas_all_schema_inference_int32_avoids_overflow():
 
     df = coll.aggregate_pandas_all(pipeline)
 
-    assert len(df) == 2
+    assert len(df) == 3
     assert df["value"].max() == 2**40
     client.close()
 
@@ -60,6 +61,6 @@ def test_aggregate_pandas_all_explicit_int64_schema_avoids_overflow():
 
     df = coll.aggregate_pandas_all(pipeline, schema=schema)
 
-    assert len(df) == 2
+    assert len(df) == 3
     assert df["value"].max() == 2**40
     client.close()
