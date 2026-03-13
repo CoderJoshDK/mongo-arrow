@@ -3,7 +3,7 @@
 
 ---
 
-# Changes in Version 1.13.0 (2026/XX/XX)
+# Changes in Version 1.13.0 (2026/03/12)
 
 - Add Polars Extension Type support for the BSON Binary, Code, ObjectId, and Decimal128 types.
 - Add ability to use threads or multiprocesses in `find_arrow_all`, `find_pandas_all`,
@@ -11,6 +11,7 @@
   `find_arrow_all(collection, {}, parallelism="threads")` would utilize threads. Other values of
   `parallelism` are `"off"` (default) and `"processes"`.
 - Fix a bug where schema inference for integer fields could produce an overflow error if the first value in the field fit within the int32 range but later values did not.
+- Fix a bug where parallel batch processing would fail when different batches had different inferred schemas.
 
 
 # Changes in Version 1.12.0 (2026/01/26)
